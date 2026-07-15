@@ -1,0 +1,44 @@
+[
+  {
+    "id": "cand_bali_sq",
+    "tripId": "trip_bali",
+    "type": "flight",
+    "airline": "Singapore Airlines",
+    "flightNo": "SQ938",
+    "from": "SIN",
+    "to": "DPS",
+    "depLocal": "2026-11-06T09:35",
+    "arrLocal": "2026-11-06T12:15",
+    "cabin": "Economy",
+    "price": 420,
+    "currency": "SGD",
+    "verdict": "shortlisted"
+  },
+  {
+    "id": "cand_bali_tr",
+    "tripId": "trip_bali",
+    "type": "flight",
+    "airline": "Scoot",
+    "flightNo": "TR280",
+    "from": "SIN",
+    "to": "DPS",
+    "depLocal": "2026-11-06T06:55",
+    "arrLocal": "2026-11-06T09:35",
+    "cabin": "Economy",
+    "price": 238,
+    "currency": "SGD",
+    "verdict": null
+  },
+  {
+    "id": "cand_bali_villa",
+    "tripId": "trip_bali",
+    "type": "stay",
+    "property": "Ubud jungle villa (3BR)",
+    "checkIn": "2026-11-06",
+    "checkOut": "2026-11-08",
+    "price": 5200000,
+    "currency": "IDR",
+    "sourceUrl": "https://example.com/villa",
+    "verdict": null
+  }
+]

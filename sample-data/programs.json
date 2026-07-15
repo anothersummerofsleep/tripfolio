@@ -1,0 +1,49 @@
+[
+  {
+    "id": "prog_krisflyer",
+    "kind": "airline",
+    "program": "KrisFlyer",
+    "alliance": "Star Alliance",
+    "memberNumber": "8812345678",
+    "tier": "Gold",
+    "tierExpiry": "2027-02-28",
+    "notes": "sample data — not a real member number",
+    "snapshots": [
+      { "date": "2026-05-01", "points": 48200 },
+      { "date": "2026-07-01", "points": 61550 }
+    ]
+  },
+  {
+    "id": "prog_asiamiles",
+    "kind": "airline",
+    "program": "Asia Miles",
+    "alliance": "oneworld",
+    "memberNumber": "1098765432",
+    "tier": "Green",
+    "tierExpiry": null,
+    "notes": "",
+    "snapshots": [{ "date": "2026-06-15", "points": 12040 }]
+  },
+  {
+    "id": "prog_bonvoy",
+    "kind": "hotel",
+    "program": "Marriott Bonvoy",
+    "alliance": null,
+    "memberNumber": "555123456",
+    "tier": "Silver Elite",
+    "tierExpiry": "2027-01-31",
+    "notes": "",
+    "snapshots": [{ "date": "2026-06-01", "points": 21500 }]
+  },
+  {
+    "id": "prog_worldofhyatt",
+    "kind": "hotel",
+    "program": "World of Hyatt",
+    "alliance": null,
+    "memberNumber": "777888999",
+    "tier": "Member",
+    "tierExpiry": null,
+    "notes": "",
+    "snapshots": []
+  }
+]

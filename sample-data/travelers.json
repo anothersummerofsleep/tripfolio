@@ -1,0 +1,5 @@
+[
+  { "id": "trav_alex", "name": "Alex", "notes": "owner of this sample vault" },
+  { "id": "trav_sam", "name": "Sam", "notes": "" },
+  { "id": "trav_jo", "name": "Jo", "notes": "vegetarian" }
+]

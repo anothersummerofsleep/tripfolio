@@ -1,0 +1,16 @@
+[
+  {
+    "id": "pol_annual",
+    "insurer": "Acme Assure",
+    "policyNumber": "TA-2026-000123",
+    "type": "annual",
+    "coverageStart": "2026-03-01",
+    "coverageEnd": "2027-02-28",
+    "maxTripDays": 90,
+    "regions": ["Worldwide excl. USA"],
+    "coveredTravelerIds": ["trav_alex", "trav_sam"],
+    "limits": { "medical": 500000, "cancellation": 15000, "baggage": 5000 },
+    "pdfPath": null,
+    "notes": "sample policy — not a real contract"
+  }
+]

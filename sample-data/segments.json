@@ -1,0 +1,62 @@
+[
+  {
+    "id": "seg_tokyo_out",
+    "tripId": "trip_tokyo",
+    "type": "flight",
+    "airline": "Singapore Airlines",
+    "flightNo": "SQ638",
+    "pnr": "SAMPLE",
+    "from": "SIN",
+    "to": "NRT",
+    "depLocal": "2026-09-14T09:25",
+    "arrLocal": "2026-09-14T17:30",
+    "cabin": "Economy",
+    "seat": "45K",
+    "programId": "prog_krisflyer"
+  },
+  {
+    "id": "seg_tokyo_back",
+    "tripId": "trip_tokyo",
+    "type": "flight",
+    "airline": "Singapore Airlines",
+    "flightNo": "SQ637",
+    "pnr": "SAMPLE",
+    "from": "NRT",
+    "to": "SIN",
+    "depLocal": "2026-09-20T11:10",
+    "arrLocal": "2026-09-20T17:40",
+    "cabin": "Economy",
+    "programId": "prog_krisflyer"
+  },
+  {
+    "id": "seg_tokyo_hotel",
+    "tripId": "trip_tokyo",
+    "type": "stay",
+    "property": "Hotel Century Southern Tower",
+    "confirmationNo": "88901234",
+    "checkIn": "2026-09-14",
+    "checkOut": "2026-09-20",
+    "address": "2-2-1 Yoyogi, Shibuya-ku, Tokyo"
+  },
+  {
+    "id": "seg_tokyo_romancecar",
+    "tripId": "trip_tokyo",
+    "type": "transport",
+    "mode": "train",
+    "operator": "Odakyu Romancecar",
+    "ref": "RC-20260917",
+    "from": "Shinjuku",
+    "to": "Hakone-Yumoto",
+    "depLocal": "2026-09-17T08:00",
+    "arrLocal": "2026-09-17T09:25"
+  },
+  {
+    "id": "seg_tokyo_sky",
+    "tripId": "trip_tokyo",
+    "type": "activity",
+    "name": "Shibuya Sky",
+    "ref": "SKY123456",
+    "date": "2026-09-15",
+    "location": "Shibuya Scramble Square, Tokyo"
+  }
+]

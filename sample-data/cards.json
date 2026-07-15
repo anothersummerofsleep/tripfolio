@@ -1,0 +1,5 @@
+[
+  { "id": "card_everyday", "name": "Everyday Card", "network": "mastercard", "fxFeePct": 3.25, "notes": "" },
+  { "id": "card_miles", "name": "Miles Card", "network": "visa", "fxFeePct": 3.25, "notes": "earns 1.2 mpd overseas" },
+  { "id": "card_platinum", "name": "Platinum Charge", "network": "amex", "fxFeePct": 2.95, "notes": "rate only knowable from statement" }
+]

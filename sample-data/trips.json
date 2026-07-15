@@ -1,0 +1,36 @@
+[
+  {
+    "id": "trip_tokyo",
+    "name": "Tokyo — cherry blossom week",
+    "status": "booked",
+    "startDate": "2026-09-14",
+    "endDate": "2026-09-20",
+    "destinations": ["Tokyo", "Hakone"],
+    "travelerIds": ["trav_alex", "trav_sam"],
+    "days": [
+      { "date": "2026-09-14", "md": "Land NRT 17:30 → Narita Express to Shinjuku. Dinner: ramen at Fuunji if the queue is sane." },
+      { "date": "2026-09-15", "md": "Meiji Shrine early, then Harajuku → Shibuya on foot. Evening: [[Shibuya Sky]] (tickets booked)." },
+      { "date": "2026-09-17", "md": "Day trip: Hakone loop — Romancecar from Shinjuku 08:00, pirate ship, ropeway, onsen at Tenzan." }
+    ]
+  },
+  {
+    "id": "trip_bali",
+    "name": "Bali long weekend",
+    "status": "planning",
+    "startDate": "2026-11-06",
+    "endDate": "2026-11-09",
+    "destinations": ["Ubud", "Canggu"],
+    "travelerIds": ["trav_alex", "trav_sam", "trav_jo"],
+    "days": []
+  },
+  {
+    "id": "trip_nz",
+    "name": "New Zealand south island",
+    "status": "dreaming",
+    "startDate": null,
+    "endDate": null,
+    "destinations": ["Queenstown", "Te Anau", "Wanaka"],
+    "travelerIds": ["trav_alex"],
+    "days": []
+  }
+]
