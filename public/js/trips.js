@@ -116,10 +116,17 @@ function tripList(data, refresh) {
 
 function tripDetail(trip, data, refresh) {
   const wrap = el('div');
+  const spend = el('span', { class: 'muted', style: 'margin-left:auto;' });
+  api.get(`trips/${trip.id}/settlement`).then((s) => {
+    if (!s.rows.length) return;
+    spend.textContent = `spend: ${new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD' }).format(s.totalSpend)}` +
+      (s.pendingCount ? ` (+${s.pendingCount} pending)` : '');
+  }).catch(() => {});
   wrap.append(el('div', { style: 'margin-bottom:1rem; display:flex; align-items:center; gap:1rem;' },
     el('button', { class: 'ghost', onclick: () => { selectedTripId = null; editor = null; refresh(); } }, '← Trips'),
     el('h2', { style: 'margin:0;' }, trip.name),
-    el('span', { class: `chip ${trip.status}` }, trip.status)));
+    el('span', { class: `chip ${trip.status}` }, trip.status),
+    spend));
 
   wrap.append(overviewPanel(trip, data, refresh));
   wrap.append(bookingsPanel(trip, data, refresh));

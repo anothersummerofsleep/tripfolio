@@ -1,0 +1,65 @@
+[
+  {
+    "id": "exp_sky",
+    "tripId": "trip_tokyo",
+    "date": "2026-07-08",
+    "description": "Shibuya Sky tickets ×2",
+    "category": "activities",
+    "amount": 5474,
+    "currency": "JPY",
+    "payerId": "trav_alex",
+    "method": { "cardId": "card_miles" },
+    "participants": [],
+    "rate": { "value": 0.00801, "date": "2026-07-08", "source": "visa", "estimated": false }
+  },
+  {
+    "id": "exp_deposit",
+    "tripId": "trip_tokyo",
+    "date": "2026-07-10",
+    "description": "Hotel deposit (1 night)",
+    "category": "lodging",
+    "amount": 20000,
+    "currency": "JPY",
+    "payerId": "trav_alex",
+    "method": { "cardId": "card_platinum" },
+    "participants": [],
+    "rate": { "value": 0.00798, "date": "2026-07-10", "source": "mid", "estimated": true, "note": "amex publishes no rates — mid-market estimate" }
+  },
+  {
+    "id": "exp_seat",
+    "tripId": "trip_tokyo",
+    "date": "2026-07-09",
+    "description": "Seat selection ×2",
+    "category": "transport",
+    "amount": 8000,
+    "currency": "JPY",
+    "payerId": "trav_sam",
+    "method": { "cardId": "card_platinum" },
+    "participants": [],
+    "rate": { "value": 0.00798, "date": "2026-07-09", "source": "mid", "estimated": true },
+    "actualSGD": 64.2
+  },
+  {
+    "id": "exp_romancecar",
+    "tripId": "trip_tokyo",
+    "date": "2026-07-13",
+    "description": "Romancecar reserved seats",
+    "category": "transport",
+    "amount": 4000,
+    "currency": "JPY",
+    "payerId": "trav_sam",
+    "method": { "exchangeId": "ex_tokyo_1" },
+    "participants": []
+  },
+  {
+    "id": "exp_dinner_planned",
+    "tripId": "trip_tokyo",
+    "date": "2026-09-15",
+    "description": "Sushi dinner (planned)",
+    "category": "food",
+    "amount": 12000,
+    "currency": "JPY",
+    "payerId": "trav_alex",
+    "participants": [{ "travelerId": "trav_alex", "share": 2 }, { "travelerId": "trav_sam", "share": 1 }]
+  }
+]

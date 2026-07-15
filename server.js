@@ -5,6 +5,8 @@ import { createStore } from './lib/store.js';
 import { ensureSeed, SEEDS } from './lib/seed.js';
 import { newId, validateItem, promoteCandidate } from './lib/model.js';
 import { collectMirrorData, generateMirror } from './lib/mirror.js';
+import { getRate, sourceForNetwork, RATE_SOURCES } from './lib/rates.js';
+import { settleTrip } from './lib/settle.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
@@ -45,6 +47,29 @@ function afterWrite() {
   try { regenerateMirror(); } catch (err) { console.error('mirror:', err.message); }
 }
 
+// Best-effort: fetch and pin the day's rate onto an expense at write time.
+// Skipped when the expense already carries the truth (statement amount or a
+// cash-pot method). A fetch failure leaves the expense rate-pending — visible
+// in the UI, retryable — and never fails the write.
+async function attachRate(expense, { force = false } = {}) {
+  if (expense.actualSGD != null || expense.method?.exchangeId) return expense;
+  if (expense.rate && !force) return expense;
+  const settings = store.read('settings', SEEDS.settings);
+  const home = settings.homeCurrency || 'SGD';
+  const card = expense.method?.cardId
+    ? store.read('cards', []).find((c) => c.id === expense.method.cardId)
+    : null;
+  const source = sourceForNetwork(card?.network);
+  try {
+    const rate = await getRate(store, { source, date: expense.date, from: expense.currency, to: home });
+    expense.rate = rate || undefined;
+  } catch (err) {
+    console.error(`rate ${expense.currency}→${home} ${expense.date}:`, err.message);
+    expense.rate = undefined;
+  }
+  return expense;
+}
+
 // Agents probe this to find a running tripfolio and discover its shape.
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, app: 'tripfolio', collections: COLLECTIONS, dataDir: DATA_DIR, mirrorDir: mirrorDir() });
@@ -67,6 +92,43 @@ app.post('/api/candidates/:id/promote', (req, res) => {
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
+});
+
+// The whole splitting picture for one trip: resolved SGD per expense,
+// per-person balances, minimal settle-up transfers, pending/estimated counts.
+app.get('/api/trips/:id/settlement', (req, res) => {
+  const trip = store.read('trips', []).find((t) => t.id === req.params.id);
+  if (!trip) return res.status(404).json({ error: `no trip ${req.params.id}` });
+  res.json(settleTrip(trip, store.read('expenses', []), {
+    cards: store.read('cards', []),
+    exchanges: store.read('exchanges', []),
+    travelers: store.read('travelers', [])
+  }));
+});
+
+// Direct rate lookup (cache-first) — used by agents and for debugging.
+// e.g. /api/rates?source=visa&date=2026-07-10&from=JPY&to=SGD
+app.get('/api/rates', async (req, res) => {
+  const { source = 'mid', date, from, to = 'SGD' } = req.query;
+  if (!date || !from) return res.status(400).json({ error: 'date and from are required' });
+  if (!RATE_SOURCES.includes(source)) return res.status(400).json({ error: `source must be one of ${RATE_SOURCES.join(', ')}` });
+  try {
+    res.json({ rate: await getRate(store, { source, date, from, to }) });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Re-attempt the rate fetch for one expense — for rows left pending (fetch
+// failed, or the date was in the future) or stuck on a mid-market fallback.
+app.post('/api/expenses/:id/refresh-rate', async (req, res) => {
+  const list = store.read('expenses', []);
+  const expense = list.find((x) => x.id === req.params.id);
+  if (!expense) return res.status(404).json({ error: `no expense ${req.params.id}` });
+  await attachRate(expense, { force: true });
+  store.write('expenses', list.map((x) => (x.id === expense.id ? expense : x)));
+  afterWrite();
+  res.json(expense);
 });
 
 function validateCollection(name, value) {
@@ -97,7 +159,7 @@ app.put('/api/:name', (req, res, next) => {
 
 // Append one item — the agent-ingest path (skills POST parsed bookings,
 // expenses, policies here one at a time). Server assigns the id.
-app.post('/api/:name', (req, res, next) => {
+app.post('/api/:name', async (req, res, next) => {
   const { name } = req.params;
   if (!COLLECTIONS.includes(name) || !Array.isArray(SEEDS[name])) return next();
   const problem = validateItem(name, req.body);
@@ -107,12 +169,13 @@ app.post('/api/:name', (req, res, next) => {
   if (list.some((x) => x.id === item.id)) {
     return res.status(409).json({ error: `${name}: id ${item.id} already exists` });
   }
+  if (name === 'expenses') await attachRate(item);
   store.write(name, [...list, item]);
   afterWrite();
   res.status(201).json(item);
 });
 
-app.patch('/api/:name/:id', (req, res, next) => {
+app.patch('/api/:name/:id', async (req, res, next) => {
   const { name, id } = req.params;
   if (!COLLECTIONS.includes(name) || !Array.isArray(SEEDS[name])) return next();
   const list = store.read(name, []);
@@ -121,6 +184,10 @@ app.patch('/api/:name/:id', (req, res, next) => {
   const merged = { ...existing, ...req.body, id };
   const problem = validateItem(name, merged);
   if (problem) return res.status(400).json({ error: `${name}: ${problem}` });
+  // Amount/date/currency/method edits invalidate a pinned rate — refetch.
+  if (name === 'expenses' && ['date', 'currency', 'method'].some((k) => k in req.body)) {
+    await attachRate(merged, { force: true });
+  }
   store.write(name, list.map((x) => (x.id === id ? merged : x)));
   afterWrite();
   res.json(merged);

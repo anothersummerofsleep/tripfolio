@@ -28,7 +28,7 @@ DATA_DIR=./sample-data npm start
 All real data lives in `DATA_DIR` (default `./data`, gitignored). Writes are atomic,
 and every file keeps a rolling `.bak` of its previous version.
 
-## What's in v1 (phase A+B — shipped)
+## What's in v1 (phases A+B+C — shipped)
 
 - **Trips** — lifecycle statuses (`dreaming → planning → booked → done`); flight /
   stay / transport / activity bookings; candidate options with prices you can compare
@@ -37,14 +37,28 @@ and every file keeps a rolling `.bak` of its previous version.
   (with warnings), and dated points snapshots you update when you feel like it.
 - **Registries** — travelers you split costs with, payment cards (name + network +
   FX fee only — never card numbers).
+- **Expenses & FX** — log spending in any currency, before or during the trip.
+  Each expense is pinned to **that day's rate from the network that actually
+  billed it** when possible: tripfolio tries Visa's and Mastercard's published
+  daily-rate endpoints (both sit behind bot protection and often reject
+  programmatic clients — tripfolio doesn't try to sneak past; it falls back to
+  ECB mid-market via frankfurter.dev and **flags the row as an estimate, with
+  the reason**). Amex publishes no rates at all, so Amex rows are always
+  estimates. Every row has an **"SGD actual"** reconcile field — type the
+  statement amount and it becomes the truth, fees included. Rates are historical
+  and cached, so logging three days late costs nothing.
+- **Cost splitting** — Splitwise-core: travelers, payer per expense, equal /
+  weighted / exact splits, cash pots that carry the money-changer rate you
+  actually got, a per-trip toggle for whether card FX fees are shared or the
+  payer's problem, and a settle-up report netted to minimal transfers in SGD.
 - **Markdown mirror** — every save regenerates a folder of markdown notes (one per
-  trip, plus Loyalty Wallet and Travel Insurance summaries) with YAML frontmatter.
-  Point `MIRROR_DIR` (or Settings → mirror folder) into an Obsidian vault and your
-  trips are browsable notes. The mirror is one-way and regenerable; never edit it.
+  trip — bookings, itinerary, expense totals and who-owes-whom — plus Loyalty
+  Wallet and Travel Insurance summaries) with YAML frontmatter. Point `MIRROR_DIR`
+  (or Settings → mirror folder) into an Obsidian vault and your trips are
+  browsable notes. The mirror is one-way and regenerable; never edit it.
 
-Coming in later phases: FX expense tracking against real Mastercard/Visa daily
-settlement rates with post-trip cost splitting (phase C), and insurance coverage
-checks against your policies (phase D). The JSON schema for those is stable today.
+Coming in phase D: insurance coverage checks against your policies (the JSON
+schema for those is stable today).
 
 ## AI-agent integration
 
@@ -59,12 +73,20 @@ PATCH  /api/<collection>/<id>
 DELETE /api/<collection>/<id>
 POST /api/candidates/<id>/promote     # candidate → confirmed booking
 POST /api/mirror                      # regenerate the markdown mirror
+GET  /api/trips/<id>/settlement       # balances, settle-up transfers, totals
+GET  /api/rates?source=visa&date=2026-07-10&from=JPY&to=SGD
+POST /api/expenses/<id>/refresh-rate  # retry a pending/estimated rate
 ```
 
-The repo ships a Claude Code skill, [`ingest-booking`](.claude/skills/ingest-booking/SKILL.md):
-paste a confirmation email into your agent and say "ingest this booking" — the agent
-parses it (no brittle per-airline regex; the model is the parser) and POSTs the
-structured segment in.
+The repo ships two Claude Code skills:
+
+- [`ingest-booking`](.claude/skills/ingest-booking/SKILL.md) — paste a confirmation
+  email and say "ingest this booking"; the agent parses it (no brittle per-airline
+  regex; the model is the parser) and POSTs the structured segment in.
+- [`ingest-expenses`](.claude/skills/ingest-expenses/SKILL.md) — during a trip, log
+  spending as one-liners on your phone ("1400 JPY dinner ramen, amex, split all");
+  afterwards the agent parses the capture note (or receipt photos) and files each
+  expense with the right day's rate fetched retroactively.
 
 ## Configuration
 

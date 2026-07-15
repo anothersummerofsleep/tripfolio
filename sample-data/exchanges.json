@@ -1,0 +1,11 @@
+[
+  {
+    "id": "ex_tokyo_1",
+    "tripId": "trip_tokyo",
+    "date": "2026-07-12",
+    "fromAmount": 500,
+    "fromCurrency": "SGD",
+    "toAmount": 55200,
+    "toCurrency": "JPY"
+  }
+]
