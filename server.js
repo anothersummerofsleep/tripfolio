@@ -8,6 +8,7 @@ import { collectMirrorData, generateMirror } from './lib/mirror.js';
 import { getRate, sourceForNetwork, RATE_SOURCES } from './lib/rates.js';
 import { settleTrip } from './lib/settle.js';
 import { tripCoverage } from './lib/coverage.js';
+import { extractBooking } from './lib/extract.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
@@ -105,6 +106,17 @@ app.get('/api/trips/:id/settlement', (req, res) => {
     exchanges: store.read('exchanges', []),
     travelers: store.read('travelers', [])
   }));
+});
+
+// Heuristic booking extraction from a pasted/uploaded confirmation email —
+// read-only: returns candidate segments + warnings for the client's review
+// form; nothing is written until the user confirms. (lib/extract.js)
+app.post('/api/extract-booking', (req, res) => {
+  const { content } = req.body || {};
+  if (typeof content !== 'string' || !content.trim()) {
+    return res.status(400).json({ error: 'content (email text) is required' });
+  }
+  res.json(extractBooking(content));
 });
 
 // "Am I covered for this trip?" — the structured check. Fine print stays in

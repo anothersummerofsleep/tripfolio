@@ -33,6 +33,15 @@ and every file keeps a rolling `.bak` of its previous version.
 - **Trips** — lifecycle statuses (`dreaming → planning → booked → done`); flight /
   stay / transport / activity bookings; candidate options with prices you can compare
   and **promote** into bookings; a markdown day-by-day itinerary per trip.
+- **Email import** — paste (or upload as `.eml`/`.txt`/`.html`) an airline or hotel
+  confirmation email and tripfolio extracts the bookings: flight numbers with the
+  airline named from a built-in carrier map, IATA routes, local departure/arrival
+  times (overnight `+1` handled), PNRs, hotel names, check-in/out, confirmation
+  numbers. Generic aviation/hotel patterns, not per-airline templates — an airline
+  it has never seen degrades gracefully instead of breaking. Deliberately
+  assistive: extraction **prefills the booking form for your review** and lists
+  every field it couldn't find; nothing is saved until you confirm. Works fully
+  offline; for gnarly emails, the `ingest-booking` agent skill reads them better.
 - **Loyalty wallet** — airline and hotel programs: member number, tier, tier expiry
   (with warnings), and dated points snapshots you update when you feel like it.
 - **Registries** — travelers you split costs with, payment cards (name + network +
@@ -75,6 +84,7 @@ PUT  /api/<collection>                #   cards, programs, expenses, exchanges,
 POST /api/<collection>                #   policies, settings
 PATCH  /api/<collection>/<id>
 DELETE /api/<collection>/<id>
+POST /api/extract-booking             # email text → candidate segments (read-only)
 POST /api/candidates/<id>/promote     # candidate → confirmed booking
 POST /api/mirror                      # regenerate the markdown mirror
 GET  /api/trips/<id>/settlement       # balances, settle-up transfers, totals

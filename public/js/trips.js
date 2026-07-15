@@ -200,9 +200,12 @@ function overviewPanel(trip, data, refresh) {
       }, 'Delete trip')));
 }
 
-// Shared add/edit form for bookings and candidates.
+// Shared add/edit form for bookings and candidates. An `item` without an id
+// is a prefill (e.g. extracted from an imported email): the form starts
+// populated but saving creates a new record.
 function editorForm(trip, data, refresh) {
   const { collection, type, item } = editor;
+  const isEdit = Boolean(item?.id);
   const fields = [...FIELDS[type], ...(collection === 'candidates' ? CANDIDATE_EXTRAS : [])];
 
   const control = ([name, label, kind = 'text']) => {
@@ -233,16 +236,18 @@ function editorForm(trip, data, refresh) {
         body[name] = kind === 'number' ? Number(raw) : raw;
       }
       try {
-        if (item) await api.patch(`${collection}/${item.id}`, body);
+        if (isEdit) await api.patch(`${collection}/${item.id}`, body);
         else await api.post(collection, body);
         editor = null;
-        toast(item ? 'Saved' : 'Added');
+        toast(isEdit ? 'Saved' : 'Added');
         refresh();
       } catch (err) { toast(err.message, true); }
     }
   },
+    item && !isEdit ? el('p', { class: 'warn', style: 'width:100%; font-size:0.82rem; margin:0;' },
+      'Prefilled from the imported email — check every field before adding.') : null,
     fields.map(control),
-    el('button', { class: 'primary' }, item ? 'Save changes' : `Add ${type}`),
+    el('button', { class: 'primary' }, isEdit ? 'Save changes' : `Add ${type}`),
     el('button', { class: 'ghost', type: 'button', onclick: () => { editor = null; refresh(); } }, 'Cancel')
   );
 }
@@ -250,7 +255,75 @@ function editorForm(trip, data, refresh) {
 function addButtons(collection, refresh) {
   return el('div', { style: 'display:flex; gap:0.5rem; flex-wrap:wrap;' },
     Object.keys(FIELDS).map((type) =>
-      el('button', { class: 'small', onclick: () => { editor = { collection, type }; refresh(); } }, `+ ${type}`)));
+      el('button', { class: 'small', onclick: () => { editor = { collection, type }; refresh(); } }, `+ ${type}`)),
+    collection === 'segments' && el('button', {
+      class: 'small',
+      onclick: () => { editor = { collection, mode: 'import' }; refresh(); }
+    }, '✉ import from email'));
+}
+
+// Paste (or upload) a confirmation email → heuristic extraction on the server
+// → each recognized booking offered for review. Nothing is saved until the
+// user confirms; extraction only prefills.
+function importPanel(trip, data, refresh) {
+  const ta = el('textarea', {
+    placeholder: 'Paste the full confirmation email here (plain text, HTML, or a saved .eml)…',
+    style: 'width:100%; min-height:9rem;'
+  });
+  const results = el('div');
+
+  const fileInput = el('input', {
+    type: 'file', accept: '.eml,.txt,.html,.htm', style: 'display:none;',
+    onchange: (ev) => {
+      const file = ev.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { ta.value = reader.result; };
+      reader.readAsText(file);
+    }
+  });
+
+  const renderResult = ({ segments, warnings }) => {
+    results.replaceChildren();
+    if (warnings?.length) {
+      results.append(el('p', { class: 'warn', style: 'font-size:0.82rem;' }, warnings.join(' · ')));
+    }
+    if (!segments.length) return;
+    results.append(el('h3', {}, `Found ${segments.length} booking${segments.length > 1 ? 's' : ''}`));
+    for (const s of segments) {
+      const { type, ...fields } = s;
+      results.append(el('div', { class: 'seg' },
+        el('span', { class: 'type' }, type),
+        el('div', { class: 'body' },
+          el('div', {}, segSummary(s)),
+          el('div', { class: 'when' }, segWhen(s))),
+        el('button', {
+          class: 'small',
+          onclick: () => { editor = { collection: 'segments', type, item: fields }; refresh(); }
+        }, 'review & add')));
+    }
+  };
+
+  return el('div', { style: 'margin-top:0.8rem; padding-top:0.8rem; border-top:1px solid var(--border);' },
+    el('p', { class: 'muted', style: 'font-size:0.85rem; margin-top:0;' },
+      'Works offline with generic airline/hotel patterns — it prefills, you check. ',
+      'For tricky emails, your AI agent (ingest-booking skill) reads them better.'),
+    ta,
+    el('div', { style: 'display:flex; gap:0.6rem; margin-top:0.6rem;' },
+      fileInput,
+      el('button', { class: 'ghost', onclick: () => fileInput.click() }, 'Choose .eml / .txt / .html'),
+      el('button', {
+        class: 'primary',
+        onclick: async (ev) => {
+          if (!ta.value.trim()) return toast('Paste an email first', true);
+          ev.target.disabled = true;
+          try { renderResult(await api.post('extract-booking', { content: ta.value })); }
+          catch (err) { toast(err.message, true); }
+          finally { ev.target.disabled = false; }
+        }
+      }, 'Extract bookings'),
+      el('button', { class: 'ghost', onclick: () => { editor = null; refresh(); } }, 'Close')),
+    results);
 }
 
 function bookingsPanel(trip, data, refresh) {
@@ -277,7 +350,9 @@ function bookingsPanel(trip, data, refresh) {
     rows.length ? rows : el('p', { class: 'muted' }, 'Nothing booked yet.'),
     el('h3', {}, 'Add booking'),
     addButtons('segments', refresh));
-  if (editor?.collection === 'segments') panel.append(editorForm(trip, data, refresh));
+  if (editor?.collection === 'segments') {
+    panel.append(editor.mode === 'import' ? importPanel(trip, data, refresh) : editorForm(trip, data, refresh));
+  }
   return panel;
 }
 
