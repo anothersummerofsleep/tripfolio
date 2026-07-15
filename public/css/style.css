@@ -125,6 +125,7 @@ tr:last-child td { border-bottom: none; }
 .chip.planning { color: var(--warn); border-color: var(--warn); }
 .chip.booked { color: var(--accent); border-color: var(--accent); }
 .chip.done { color: var(--accent-2); border-color: var(--accent-2); }
+.chip.uncovered { color: var(--danger); border-color: var(--danger); }
 
 .trip-card {
   display: flex;

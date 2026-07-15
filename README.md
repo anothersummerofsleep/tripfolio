@@ -28,7 +28,7 @@ DATA_DIR=./sample-data npm start
 All real data lives in `DATA_DIR` (default `./data`, gitignored). Writes are atomic,
 and every file keeps a rolling `.bak` of its previous version.
 
-## What's in v1 (phases A+B+C — shipped)
+## What's in v1 (complete)
 
 - **Trips** — lifecycle statuses (`dreaming → planning → booked → done`); flight /
   stay / transport / activity bookings; candidate options with prices you can compare
@@ -51,14 +51,18 @@ and every file keeps a rolling `.bak` of its previous version.
   weighted / exact splits, cash pots that carry the money-changer rate you
   actually got, a per-trip toggle for whether card FX fees are shared or the
   payer's problem, and a settle-up report netted to minimal transfers in SGD.
+- **Insurance** — policy records (annual multi-trip or single-trip) with the
+  policy PDF filed alongside. Every trip gets a coverage badge — **covered /
+  partial / uncovered** — computed strictly from dates, per-trip duration caps,
+  and who's on the policy. Deliberately *not* computed: region matching and fine
+  print (skiing? drone? pre-existing conditions?) — string-matching "Worldwide
+  excl. USA" against destinations is a fiction, so those questions go to your
+  agent, which reads the PDF on file and answers from the actual wording.
 - **Markdown mirror** — every save regenerates a folder of markdown notes (one per
-  trip — bookings, itinerary, expense totals and who-owes-whom — plus Loyalty
-  Wallet and Travel Insurance summaries) with YAML frontmatter. Point `MIRROR_DIR`
-  (or Settings → mirror folder) into an Obsidian vault and your trips are
-  browsable notes. The mirror is one-way and regenerable; never edit it.
-
-Coming in phase D: insurance coverage checks against your policies (the JSON
-schema for those is stable today).
+  trip — bookings, itinerary, expense totals and who-owes-whom, coverage status —
+  plus Loyalty Wallet and Travel Insurance summaries) with YAML frontmatter. Point
+  `MIRROR_DIR` (or Settings → mirror folder) into an Obsidian vault and your trips
+  are browsable notes. The mirror is one-way and regenerable; never edit it.
 
 ## AI-agent integration
 
@@ -74,11 +78,14 @@ DELETE /api/<collection>/<id>
 POST /api/candidates/<id>/promote     # candidate → confirmed booking
 POST /api/mirror                      # regenerate the markdown mirror
 GET  /api/trips/<id>/settlement       # balances, settle-up transfers, totals
+GET  /api/trips/<id>/coverage         # insurance badge + reasons
 GET  /api/rates?source=visa&date=2026-07-10&from=JPY&to=SGD
 POST /api/expenses/<id>/refresh-rate  # retry a pending/estimated rate
+POST /api/policies/<id>/pdf           # attach the policy document
+GET  /api/policies/<id>/pdf           # read it back (agents answer fine print from this)
 ```
 
-The repo ships two Claude Code skills:
+The repo ships three Claude Code skills:
 
 - [`ingest-booking`](.claude/skills/ingest-booking/SKILL.md) — paste a confirmation
   email and say "ingest this booking"; the agent parses it (no brittle per-airline
@@ -87,6 +94,9 @@ The repo ships two Claude Code skills:
   spending as one-liners on your phone ("1400 JPY dinner ramen, amex, split all");
   afterwards the agent parses the capture note (or receipt photos) and files each
   expense with the right day's rate fetched retroactively.
+- [`ingest-policy`](.claude/skills/ingest-policy/SKILL.md) — hand over an insurance
+  PDF; the agent extracts the structured coverage fields, files the record, and
+  attaches the document — then answers "does it cover skiing?" from the wording.
 
 ## Configuration
 

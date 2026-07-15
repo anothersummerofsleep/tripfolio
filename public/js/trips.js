@@ -122,10 +122,17 @@ function tripDetail(trip, data, refresh) {
     spend.textContent = `spend: ${new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD' }).format(s.totalSpend)}` +
       (s.pendingCount ? ` (+${s.pendingCount} pending)` : '');
   }).catch(() => {});
+  const cover = el('span');
+  api.get(`trips/${trip.id}/coverage`).then((c) => {
+    if (c.status === 'unknown') return;
+    const chipClass = { covered: 'done', partial: 'planning', uncovered: 'uncovered', none: 'uncovered' }[c.status];
+    cover.append(el('span', { class: `chip ${chipClass}`, title: 'insurance — see the Insurance tab' }, `insurance: ${c.status}`));
+  }).catch(() => {});
   wrap.append(el('div', { style: 'margin-bottom:1rem; display:flex; align-items:center; gap:1rem;' },
     el('button', { class: 'ghost', onclick: () => { selectedTripId = null; editor = null; refresh(); } }, '← Trips'),
     el('h2', { style: 'margin:0;' }, trip.name),
     el('span', { class: `chip ${trip.status}` }, trip.status),
+    cover,
     spend));
 
   wrap.append(overviewPanel(trip, data, refresh));

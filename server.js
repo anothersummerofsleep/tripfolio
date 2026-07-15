@@ -7,6 +7,7 @@ import { newId, validateItem, promoteCandidate } from './lib/model.js';
 import { collectMirrorData, generateMirror } from './lib/mirror.js';
 import { getRate, sourceForNetwork, RATE_SOURCES } from './lib/rates.js';
 import { settleTrip } from './lib/settle.js';
+import { tripCoverage } from './lib/coverage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
@@ -104,6 +105,34 @@ app.get('/api/trips/:id/settlement', (req, res) => {
     exchanges: store.read('exchanges', []),
     travelers: store.read('travelers', [])
   }));
+});
+
+// "Am I covered for this trip?" — the structured check. Fine print stays in
+// the policy PDF (see /api/policies/:id/pdf), which is the agent's job to read.
+app.get('/api/trips/:id/coverage', (req, res) => {
+  const trip = store.read('trips', []).find((t) => t.id === req.params.id);
+  if (!trip) return res.status(404).json({ error: `no trip ${req.params.id}` });
+  res.json(tripCoverage(trip, store.read('policies', []), store.read('travelers', [])));
+});
+
+// Attach the policy document: body { filename, content } with content base64.
+app.post('/api/policies/:id/pdf', (req, res) => {
+  const list = store.read('policies', []);
+  const policy = list.find((p) => p.id === req.params.id);
+  if (!policy) return res.status(404).json({ error: `no policy ${req.params.id}` });
+  const { filename, content } = req.body || {};
+  if (!filename || !content) return res.status(400).json({ error: 'filename and content (base64) are required' });
+  policy.pdfPath = store.savePolicyFile(filename, content);
+  store.write('policies', list);
+  afterWrite();
+  res.json(policy);
+});
+
+// Serve the stored policy document for viewing (and for agents to read).
+app.get('/api/policies/:id/pdf', (req, res) => {
+  const policy = store.read('policies', []).find((p) => p.id === req.params.id);
+  if (!policy?.pdfPath) return res.status(404).json({ error: 'no document on file for this policy' });
+  res.sendFile(path.resolve(store.dataDir, policy.pdfPath));
 });
 
 // Direct rate lookup (cache-first) — used by agents and for debugging.

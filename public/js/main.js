@@ -3,6 +3,7 @@ import { toast } from './ui.js';
 import { renderTrips } from './trips.js';
 import { renderExpenses } from './expenses.js';
 import { renderLoyalty } from './loyalty.js';
+import { renderInsurance } from './insurance.js';
 import { renderRegistries } from './registries.js';
 import { renderSettings } from './settings.js';
 
@@ -10,6 +11,7 @@ const TABS = {
   trips: renderTrips,
   expenses: renderExpenses,
   loyalty: renderLoyalty,
+  insurance: renderInsurance,
   registries: renderRegistries,
   settings: renderSettings
 };
