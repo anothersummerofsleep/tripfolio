@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -9,10 +10,12 @@ import { getRate, sourceForNetwork, RATE_SOURCES } from './lib/rates.js';
 import { settleTrip } from './lib/settle.js';
 import { tripCoverage } from './lib/coverage.js';
 import { extractBooking } from './lib/extract.js';
+import { buildManifest, manifestMarkdown } from './lib/manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
 const PORT = Number(process.env.PORT || 5179);
+const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
 
 const store = createStore(DATA_DIR);
 ensureSeed(store);
@@ -24,7 +27,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const COLLECTIONS = Object.keys(SEEDS);
 const ID_PREFIX = {
   travelers: 'trav', cards: 'card', programs: 'prog', trips: 'trip',
-  segments: 'seg', candidates: 'cand', expenses: 'exp', exchanges: 'ex', policies: 'pol'
+  segments: 'seg', candidates: 'cand', expenses: 'exp', exchanges: 'ex',
+  policies: 'pol', agents: 'agent'
 };
 
 // MIRROR_DIR env var wins; then the in-app setting; then a folder inside
@@ -74,7 +78,24 @@ async function attachRate(expense, { force = false } = {}) {
 
 // Agents probe this to find a running tripfolio and discover its shape.
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, app: 'tripfolio', collections: COLLECTIONS, dataDir: DATA_DIR, mirrorDir: mirrorDir() });
+  res.json({ ok: true, app: 'tripfolio', version: pkg.version, collections: COLLECTIONS, dataDir: DATA_DIR, mirrorDir: mirrorDir() });
+});
+
+// Self-describing capability manifest: point an AI agent here (JSON, or
+// ?format=md for a paste-into-chat brief) and it can use tripfolio without
+// prior knowledge. baseUrl is taken from the request so it's always right.
+app.get('/api/agent-manifest', (req, res) => {
+  const manifest = buildManifest({
+    baseUrl: `${req.protocol}://${req.get('host')}`,
+    appDir: __dirname,
+    collections: COLLECTIONS,
+    version: pkg.version
+  });
+  if (req.query.format === 'md') {
+    res.type('text/markdown').send(manifestMarkdown(manifest));
+  } else {
+    res.json(manifest);
+  }
 });
 
 app.post('/api/mirror', (req, res) => {

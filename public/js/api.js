@@ -19,7 +19,7 @@ export const api = {
   del: (path) => fetch(`/api/${path}`, { method: 'DELETE' }).then(handle)
 };
 
-const NAMES = ['trips', 'segments', 'candidates', 'travelers', 'cards', 'programs', 'expenses', 'exchanges', 'policies', 'settings'];
+const NAMES = ['trips', 'segments', 'candidates', 'travelers', 'cards', 'programs', 'expenses', 'exchanges', 'policies', 'agents', 'settings'];
 
 export async function loadAll() {
   const values = await Promise.all(NAMES.map((n) => api.get(n)));

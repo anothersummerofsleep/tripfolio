@@ -75,13 +75,29 @@ and every file keeps a rolling `.bak` of its previous version.
 
 ## AI-agent integration
 
-The UI's own REST API doubles as the agent surface:
+tripfolio is built to be *used by* AI agents (Claude Code, Cowork, or anything
+that speaks HTTP), not just by a human at the browser. Point an agent at a running
+instance and it can read your trips, loyalty status, budget and coverage, and write
+bookings, expenses and policies back.
+
+**Self-describing manifest.** `GET /api/agent-manifest` returns a machine-readable
+capability document — every endpoint with a plain-English purpose, the data
+conventions, and the skills that ship with the repo. Add `?format=md` for a
+paste-into-chat brief. An agent that fetches this can use tripfolio with no prior
+knowledge; nothing else to configure.
+
+**Register your agents.** Settings → *AI agents* lets you add the agents you use and
+shows each one's tailored connection recipe, plus one-click copy of the manifest URL
+or the full Markdown guide.
+
+The UI's own REST API is that agent surface:
 
 ```
-GET  /api/health                      # discover a running tripfolio
-GET  /api/<collection>                # trips, segments, candidates, travelers,
-PUT  /api/<collection>                #   cards, programs, expenses, exchanges,
-POST /api/<collection>                #   policies, settings
+GET  /api/health                      # discover a running tripfolio (name, version, collections)
+GET  /api/agent-manifest[?format=md]  # self-describing capabilities for an agent to self-configure
+GET  /api/<collection>                # trips, segments, candidates, travelers, cards,
+PUT  /api/<collection>                #   programs, expenses, exchanges, policies,
+POST /api/<collection>                #   agents, settings
 PATCH  /api/<collection>/<id>
 DELETE /api/<collection>/<id>
 POST /api/extract-booking             # email text → candidate segments (read-only)
@@ -95,7 +111,7 @@ POST /api/policies/<id>/pdf           # attach the policy document
 GET  /api/policies/<id>/pdf           # read it back (agents answer fine print from this)
 ```
 
-The repo ships three Claude Code skills:
+The repo ships three Claude Code skills (also listed in the manifest):
 
 - [`ingest-booking`](.claude/skills/ingest-booking/SKILL.md) — paste a confirmation
   email and say "ingest this booking"; the agent parses it (no brittle per-airline
