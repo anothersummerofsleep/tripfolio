@@ -22,14 +22,30 @@ answered later by reading it.
      policy covers whoever travels. If an insured person isn't in tripfolio yet, ask
      before creating them.
    - `limits`: `{ medical, cancellation, baggage }` — headline amounts in home currency
-   - `notes`: anything load-bearing that doesn't fit (excess amounts, adventure-sports
-     rider, pre-existing conditions cover)
+   - `benefits`: **the full "what's covered and how much" table** — an array of
+     `{ name, limit }` (limit in home-currency dollars; omit `limit` for a covered item
+     whose sum isn't stated). This is the high-value field only an agent can fill: the
+     schedule almost never lists sums insured — they live in the **policy wording** table
+     (often a subset-font PDF the offline importer reads as garbage). Read the wording,
+     find the column for the insured's plan/tier (e.g. "Plus"), and record each section
+     with its amount. Never invent a figure; leave `limit` off if you can't read it.
+   - `notes`: anything load-bearing that doesn't fit (plan/tier name, optional riders,
+     excess amounts, pre-existing conditions cover)
 3. **Show before filing.** Present the extracted fields and confirm, unless already told to file.
 4. **Create the record**: `POST /api/policies` with the JSON body.
 5. **Attach the document**: `POST /api/policies/<id>/pdf` with
    `{ "filename": "policy.pdf", "content": "<base64 of the file>" }`.
 6. **Report** what was filed and what the app now shows per trip
    (`GET /api/trips/<id>/coverage`). Say clearly which fields you could not find.
+
+## Offline import (no agent)
+
+The app also ships a heuristic, no-agent path for when you're not around: **Insurance →
+⬆ Import from document** (or `POST /api/extract-policy` with `{ content }` or
+`{ pdf, filename }`). It prefills the Add-policy form from a pasted schedule or a
+text-based PDF and lets the user file it themselves. It can't read scanned/image PDFs
+and won't match insured names to travelers — that's what this skill is for, and it stays
+the higher-accuracy path. Prefer it whenever the user hands *you* the document.
 
 ## Answering "am I covered for X?"
 

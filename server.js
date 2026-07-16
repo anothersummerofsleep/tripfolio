@@ -10,6 +10,8 @@ import { getRate, sourceForNetwork, RATE_SOURCES } from './lib/rates.js';
 import { settleTrip } from './lib/settle.js';
 import { tripCoverage } from './lib/coverage.js';
 import { extractBooking } from './lib/extract.js';
+import { extractPolicy } from './lib/extract-policy.js';
+import { pdfToText } from './lib/pdf-text.js';
 import { buildManifest, manifestMarkdown } from './lib/manifest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -138,6 +140,29 @@ app.post('/api/extract-booking', (req, res) => {
     return res.status(400).json({ error: 'content (email text) is required' });
   }
   res.json(extractBooking(content));
+});
+
+// Heuristic policy extraction from a pasted schedule / certificate, or a
+// text-based policy PDF (body { content } or { pdf: base64, filename }) —
+// read-only: returns prefill fields + warnings for the client's Add-policy
+// form. Nothing is written until the user confirms. A scanned/image PDF yields
+// no text; we say so and point at pasting or the ingest-policy skill instead.
+app.post('/api/extract-policy', (req, res) => {
+  const { content, pdf, filename } = req.body || {};
+  if (typeof pdf === 'string' && pdf.trim()) {
+    const text = pdfToText(pdf);
+    if (!text.trim()) {
+      return res.json({
+        policy: {}, source: 'pdf', textFound: false,
+        warnings: [`couldn't read text from ${filename || 'the PDF'} — it may be scanned or image-based. Paste the policy text, or ask your AI agent (ingest-policy skill) to read it.`]
+      });
+    }
+    return res.json({ ...extractPolicy(text), source: 'pdf', textFound: true });
+  }
+  if (typeof content === 'string' && content.trim()) {
+    return res.json({ ...extractPolicy(content), source: 'text', textFound: true });
+  }
+  return res.status(400).json({ error: 'content (policy text) or pdf (base64) is required' });
 });
 
 // "Am I covered for this trip?" — the structured check. Fine print stays in

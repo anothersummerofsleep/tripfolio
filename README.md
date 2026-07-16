@@ -67,6 +67,19 @@ and every file keeps a rolling `.bak` of its previous version.
   print (skiing? drone? pre-existing conditions?) — string-matching "Worldwide
   excl. USA" against destinations is a fiction, so those questions go to your
   agent, which reads the PDF on file and answers from the actual wording.
+- **Policy import** — the insurance counterpart of email import: paste a policy
+  schedule / certificate of insurance, or **upload the document** (a text-based
+  PDF, or `.txt`/`.html`/`.eml`), and tripfolio extracts insurer, policy number,
+  annual-vs-single, coverage window, per-trip day cap, area of cover, and the
+  medical / cancellation / baggage limits. Same contract as booking import: it
+  **prefills the Add-policy form for your review** and lists what it couldn't
+  find; an uploaded PDF rides along and is filed on save. Reads text-based PDFs
+  with no dependency (Node's built-in zlib), and *if* poppler's `pdftotext`
+  happens to be on the PATH it's used as a fallback for PDFs the built-in reader
+  can't crack (set `PDFTOTEXT` to point at the binary if it's elsewhere) — an
+  optional enhancement, never required. A **scanned** policy has no text layer to
+  read either way, so it says so and points you at pasting the text or the
+  `ingest-policy` agent skill, which reads it better.
 - **Markdown mirror** — every save regenerates a folder of markdown notes (one per
   trip — bookings, itinerary, expense totals and who-owes-whom, coverage status —
   plus Loyalty Wallet and Travel Insurance summaries) with YAML frontmatter. Point
@@ -101,6 +114,7 @@ POST /api/<collection>                #   agents, settings
 PATCH  /api/<collection>/<id>
 DELETE /api/<collection>/<id>
 POST /api/extract-booking             # email text → candidate segments (read-only)
+POST /api/extract-policy              # policy text or PDF → prefill fields (read-only)
 POST /api/candidates/<id>/promote     # candidate → confirmed booking
 POST /api/mirror                      # regenerate the markdown mirror
 GET  /api/trips/<id>/settlement       # balances, settle-up transfers, totals
