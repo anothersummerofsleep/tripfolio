@@ -1,8 +1,8 @@
 # tripfolio
 
-Local-first travel companion — trips, loyalty programs, FX-aware expense splitting,
-and insurance coverage in plain JSON your AI agents can read. No database, no cloud,
-no build step. Your data never leaves your machine.
+**Local-first travel companion: trips, loyalty programs, FX-aware expense splitting, and insurance coverage in plain JSON your AI agents can read.**
+
+No database, no cloud, no build step. Your data never leaves your machine.
 
 ## Why
 
@@ -158,4 +158,6 @@ The repo ships three Claude Code skills (also listed in the manifest):
 npm test
 ```
 
-MIT licensed.
+## License
+
+[MIT](LICENSE). Use it, fork it, build on it.
