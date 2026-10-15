@@ -189,8 +189,15 @@ app.post('/api/policies/:id/pdf', (req, res) => {
 // Serve the stored policy document for viewing (and for agents to read).
 app.get('/api/policies/:id/pdf', (req, res) => {
   const policy = store.read('policies', []).find((p) => p.id === req.params.id);
-  if (!policy?.pdfPath) return res.status(404).json({ error: 'no document on file for this policy' });
-  res.sendFile(path.resolve(store.dataDir, policy.pdfPath));
+  // Only files inside DATA_DIR/policies/ are served; any other stored path is
+  // treated the same as no document (no hint whether an outside file exists).
+  const file = store.policyFilePath(policy?.pdfPath);
+  if (!file) return res.status(404).json({ error: 'no document on file for this policy' });
+  // Handle send errors here (e.g. the file vanished after the check) so the
+  // global error handler never echoes a message containing the file's path.
+  res.sendFile(file, (err) => {
+    if (err && !res.headersSent) res.status(404).json({ error: 'no document on file for this policy' });
+  });
 });
 
 // Direct rate lookup (cache-first) — used by agents and for debugging.
