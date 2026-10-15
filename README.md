@@ -4,6 +4,18 @@
 
 No database, no cloud, no build step. Your data never leaves your machine.
 
+![A trip in tripfolio: status and insurance-coverage badges, travelers, and five bookings (hotel, two flights, an activity, a train)](docs/screenshots/trip.png)
+
+<sub>Captured from `npm run demo`, which serves the repo's fictional sample data (travelers "Alex" and "Sam", placeholder booking references). No real bookings.</sub>
+
+**Try it:** `npm install && npm run demo`, then open http://127.0.0.1:5179 (details in [Quick start](#quick-start)).
+**Read the code:** [settle-up](lib/settle.js) ·
+[FX rates and fallbacks](lib/rates.js) ·
+[insurance coverage](lib/coverage.js) ·
+[booking email extraction](lib/extract.js) ·
+[agent manifest](lib/manifest.js) ·
+[tests](test/) (`npm test`, Node's built-in `node:test`).
+
 ## Why
 
 Travel data is scattered: bookings in email, member numbers in a notes app, spending
@@ -22,8 +34,14 @@ npm start          # http://127.0.0.1:5179
 Try it with sample data first:
 
 ```bash
-DATA_DIR=./sample-data npm start
+npm run demo       # http://127.0.0.1:5179, fictional sample data
 ```
+
+`npm run demo` copies `sample-data/` into a gitignored `.demo-data/` folder and serves
+that copy, so nothing you do in the demo changes the committed sample files. It always
+points `DATA_DIR` and `MIRROR_DIR` at that copy, even if you have them set for real use,
+so a demo session can't read your real trips or touch your markdown mirror. Restarting
+the demo starts fresh.
 
 All real data lives in `DATA_DIR` (default `./data`, gitignored). Writes are atomic,
 and every file keeps a rolling `.bak` of its previous version.
@@ -60,6 +78,8 @@ and every file keeps a rolling `.bak` of its previous version.
   weighted / exact splits, cash pots that carry the money-changer rate you
   actually got, a per-trip toggle for whether card FX fees are shared or the
   payer's problem, and a settle-up report netted to minimal transfers in SGD.
+
+  ![Expenses for the sample Tokyo trip: each row's rate source (Visa daily rate, statement amount, estimated mid-market, cash pot, pending), the per-person summary with a settle-up line, and a cash pot](docs/screenshots/expenses.png)
 - **Insurance** — policy records (annual multi-trip or single-trip) with the
   policy PDF filed alongside. Every trip gets a coverage badge — **covered /
   partial / uncovered** — computed strictly from dates, per-trip duration caps,
@@ -146,6 +166,8 @@ The repo ships three Claude Code skills (also listed in the manifest):
 | `MIRROR_DIR` | `<DATA_DIR>/mirror` | Where markdown notes are generated |
 | `PORT` | `5179` | Listen port (localhost only) |
 
+`npm run demo` ignores `DATA_DIR` and `MIRROR_DIR` and uses `.demo-data/` instead.
+
 ## Privacy posture
 
 - Binds to `127.0.0.1` only.
@@ -157,6 +179,12 @@ The repo ships three Claude Code skills (also listed in the manifest):
 ```bash
 npm test
 ```
+
+Unit tests cover the core modules (settlement, FX rates, coverage, booking and policy
+extraction, PDF text, mirror, store, model, manifest). `test/demo.test.js` starts the real server to check that demo mode
+keeps its JSON, `.bak` files and markdown mirror inside `.demo-data/` and leaves
+`sample-data/` untouched, even with `DATA_DIR` and `MIRROR_DIR` set or the mirror folder
+changed in Settings; it rewrites `.demo-data/` as it runs.
 
 ## License
 
